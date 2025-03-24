@@ -1,2 +1,13 @@
+# AI therapist
 
-![chatbot](https://github.com/user-attachments/assets/954cf0e1-1178-4b07-8e17-969e80ebbb1c)
+## Reflection
+
+A brief, empathetic reflection of what the user has shared, demonstrating careful listening and understanding.
+
+## Observation
+
+An observation about potential underlying issues or patterns, framed gently and tentatively.
+
+## Question
+
+An open-ended question that guides the user towards self-discovery or explores potential issues further.
