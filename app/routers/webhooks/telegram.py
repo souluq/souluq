@@ -51,7 +51,7 @@ async def telegram_webhook(request: Request):
             user_id=str(body.message.chat.id),
             message_id=f"{body.message.chat.id}-{body.message.message_id}",
             text=text,
-            date=date,
+            # date=date,
         )
         await send_message(body.message.chat.id, response_message)
 
