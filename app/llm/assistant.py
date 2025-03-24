@@ -37,23 +37,24 @@ async def generate_response(
         )
         messages = messages.scalars().all()
 
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
-            input=[
+            messages=[
                 {"role": "system", "content": prompt},
             ]
             + [{"role": msg.role, "content": msg.content} for msg in messages],
         )
+        response_text = response.choices[0].message.content
 
         response_date = datetime.now()
         ai_message = Message(
             id=response.id,
             user_id=user_id,
-            content=response.output_text,
+            content=response_text,
             response_id=response.id,
             role="assistant",
             date=response_date,
         )
         await create_message(session, ai_message)
 
-    return response.output_text
+    return response_text
