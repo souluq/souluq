@@ -45,12 +45,14 @@ async def generate_response(
             + [{"role": msg.role, "content": msg.content} for msg in messages],
         )
 
+        response_date = datetime.now()
         ai_message = Message(
             id=response.id,
             user_id=user_id,
             content=response.output_text,
             response_id=response.id,
             role="assistant",
+            date=response_date,
         )
         await create_message(session, ai_message)
 
