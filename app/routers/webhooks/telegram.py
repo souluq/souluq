@@ -40,7 +40,7 @@ async def telegram_webhook(request: Request):
         req_body = await request.json()
         body = TelegramWebhookPayload.model_validate(req_body)
         text = body.message.text
-        date = datetime.fromtimestamp(body.message.date)
+        date = datetime.now()
 
         if text.strip() == "/start":
             await send_message(body.message.chat.id, "Напишите любое сообщение")
@@ -51,7 +51,7 @@ async def telegram_webhook(request: Request):
             user_id=str(body.message.chat.id),
             message_id=f"{body.message.chat.id}-{body.message.message_id}",
             text=text,
-            # date=date,
+            date=date,
         )
         await send_message(body.message.chat.id, response_message)
 

@@ -13,7 +13,7 @@ async def generate_response(
     user_id: str,
     message_id: str,
     text: str,
-    date: datetime = datetime.now(),
+    date: str,
 ):
     async with async_session_maker() as session:
         user = await session.execute(select(User).where(User.id == user_id))
