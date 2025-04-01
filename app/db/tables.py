@@ -21,5 +21,5 @@ class Message(Base):
     role: Mapped[str] = mapped_column(nullable=False)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     content: Mapped[str] = mapped_column(nullable=False)
-    date: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now())
+    date: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now)
     response_id: Mapped[str] = mapped_column(nullable=True)

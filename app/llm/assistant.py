@@ -1,19 +1,18 @@
 from datetime import datetime
 
-from sqlalchemy import asc, select
+from sqlalchemy import asc, desc, select
 
 from app.db.actions import create_message, create_user
 from app.db.engine import async_session_maker
 from app.db.tables import Message, User
 
-from . import client, prompt
+from . import PROMPT, client
 
 
 async def generate_response(
     user_id: str,
     message_id: str,
     text: str,
-    date: str,
 ):
     async with async_session_maker() as session:
         user = await session.execute(select(User).where(User.id == user_id))
@@ -24,36 +23,43 @@ async def generate_response(
             await create_user(session, user)
 
         user_message = Message(
-            id=message_id, user_id=user_id, content=text, role="user", date=date
+            id=message_id, user_id=user_id, content=text, role="user"
         )
         await create_message(session, user_message)
 
         messages = await session.execute(
             select(Message)
-            .where(
-                Message.user_id == user_id,
-            )
-            .order_by(asc(Message.date))
+            .where(Message.user_id == user_id, Message.role == "assistant")
+            .order_by(desc(Message.date))
+            .limit(1)
         )
-        messages = messages.scalars().all()
+        last_response = messages.scalars().first()
 
-        response = client.chat.completions.create(
+        prompt = {
+            "role": "developer",
+            "content": [{"type": "input_text", "text": PROMPT}],
+        }
+
+        human_input = {
+            "role": "user",
+            "content": [{"type": "input_text", "text": text}],
+        }
+
+        ai_input = text if last_response else [prompt, human_input]
+
+        response = client.responses.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": prompt},
-            ]
-            + [{"role": msg.role, "content": msg.content} for msg in messages],
+            input=ai_input,
+            previous_response_id=last_response.id if last_response else None,
         )
-        response_text = response.choices[0].message.content
+        response_text = response.output_text
 
-        response_date = datetime.now()
         ai_message = Message(
             id=response.id,
             user_id=user_id,
             content=response_text,
             response_id=response.id,
             role="assistant",
-            date=response_date,
         )
         await create_message(session, ai_message)
 

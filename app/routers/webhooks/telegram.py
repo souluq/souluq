@@ -7,7 +7,7 @@ from sqlalchemy import desc, select
 from app.config import env
 from app.db.engine import async_session_maker
 from app.db.tables import Message
-from app.llm import prompt
+from app.llm import PROMPT
 from app.llm.assistant import generate_response
 from app.telegram.messages import send_message
 from app.telegram.schemas import TelegramWebhookPayload
