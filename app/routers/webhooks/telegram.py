@@ -8,8 +8,8 @@ from app.config import env
 from app.db.engine import async_session_maker
 from app.db.tables import Message
 from app.llm import PROMPT
-from app.llm.assistant import generate_response
-from app.telegram.messages import send_message
+from app.llm.assistant import generate_response, get_audio
+from app.telegram.messages import send_audio, send_message
 from app.telegram.schemas import TelegramWebhookPayload
 
 telegram_router = APIRouter(prefix="/telegram")
@@ -46,27 +46,27 @@ async def telegram_webhook(request: Request):
             await send_message(body.message.chat.id, "Напишите любое сообщение")
             return {"success": True}
 
+        if text.startswith("/speak"):
+            msg_id = text.replace("/speak", "")
+            audio = await get_audio(msg_id)
+            if not audio:
+                await send_message(body.message.chat.id, "Не удалось получить аудио")
+                return {"success": True}
+
+            await send_audio(body.message.chat.id, audio)
+
+            return {"success": True}
+
         print(f"Received messages from {body.message.chat.username}: {text}")
-        response_message = await generate_response(
+        response_message, response_id = await generate_response(
             user_id=str(body.message.chat.id),
             message_id=f"{body.message.chat.id}-{body.message.message_id}",
             text=text,
         )
-        await send_message(body.message.chat.id, response_message)
+        resp_text = f"{response_message}\n\n/speak{response_id}"
+        await send_message(body.message.chat.id, resp_text)
 
     except ValidationError:
         pass
 
     return {"success": True}
-
-
-async def validate_latest(user_id: str, date: datetime):
-    async with async_session_maker() as session:
-        latest_message = await session.execute(
-            select(Message)
-            .where(Message.user_id == user_id)
-            .order_by(desc(Message.date))
-        )
-        latest_message = latest_message.scalars().first()
-
-        return date > latest_message.date or latest_message is None
